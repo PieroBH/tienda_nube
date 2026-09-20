@@ -6,13 +6,14 @@
  * - Gestión de Fotos con Compresión Automática
  */
 
-// 1. Inicialización de Supabase
+// 1. Inicialización de Supabase con limpieza automática de URL
+const rawUrl = typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL.trim() : '';
+const cleanUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
 const isSupabaseActive = typeof supabase !== 'undefined' &&
-  typeof SUPABASE_URL !== 'undefined' &&
-  SUPABASE_URL.startsWith('https://') &&
-  !SUPABASE_URL.includes('TU-PROYECTO');
+  cleanUrl.startsWith('https://') &&
+  !cleanUrl.includes('TU-PROYECTO');
 
-const supabaseClient = isSupabaseActive ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const supabaseClient = isSupabaseActive ? supabase.createClient(cleanUrl, SUPABASE_ANON_KEY.trim()) : null;
 
 // Claves de autenticación local
 const PASS_STORAGE_KEY = 'catalogo_admin_pass';
