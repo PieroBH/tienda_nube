@@ -827,6 +827,27 @@ function setupEventListeners() {
     }
   });
   btnResetDemoData.addEventListener('click', resetDemoData);
+  setupThemeToggle();
+}
+
+function setupThemeToggle() {
+  const btnTheme = document.getElementById('btnThemeToggle');
+  if (!btnTheme) return;
+
+  function updateIcon(theme) {
+    btnTheme.textContent = theme === 'light' ? '☀️' : '🌙';
+  }
+
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  updateIcon(currentTheme);
+
+  btnTheme.addEventListener('click', () => {
+    const active = document.documentElement.getAttribute('data-theme') || 'dark';
+    const nextTheme = active === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('catalogo_theme', nextTheme);
+    updateIcon(nextTheme);
+  });
 }
 
 function escapeHTML(str) {

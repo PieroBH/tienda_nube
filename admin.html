@@ -8,6 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    const savedTheme = localStorage.getItem('catalogo_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
 </head>
 <body class="admin-body">
 
@@ -62,6 +66,7 @@
         </div>
 
         <div class="nav-actions">
+          <button id="btnThemeToggle" class="btn-theme-toggle" title="Cambiar tema (Dark / Light)" aria-label="Cambiar tema">🌙</button>
           <a href="index.html" target="_blank" class="btn btn-secondary btn-sm" title="Abrir catálogo público en otra pestaña">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             <span>Ver Catálogo</span>
