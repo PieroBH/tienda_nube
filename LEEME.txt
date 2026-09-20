@@ -1,0 +1,38 @@
+=============================================================
+           CATÁLOGO SIMPLE DE PRODUCTOS
+=============================================================
+
+Tu web está dividida en dos páginas completamente independientes:
+
+1. EL CATÁLOGO PÚBLICO (Para tus clientes)
+------------------------------------------
+Archivo: "index.html" (o doble clic en "abrir-catalogo.bat")
+- Vista 100% limpia y elegante pensada exclusivamente para los compradores.
+- No muestra botones de agregar, editar ni borrar productos.
+- Los clientes pueden buscar, filtrar por categorías, ver fotos y detalles,
+  y presionar "Pedir por WhatsApp" para enviarte un mensaje directo.
+
+- ACCESO DISCRETO PARA EL ADMINISTRADOR:
+  Al final de la página (en el pie/footer), de manera muy sutil y poco visible,
+  encontrarás un candadito que dice "🔒 Acceso". Al hacer clic, te abre 
+  la página de administración en una nueva pestaña.
+
+
+2. EL PANEL DE ADMINISTRACIÓN (Protegido por Clave)
+---------------------------------------------------
+Archivo: "admin.html" (o doble clic en "abrir-administracion.bat")
+- PANTALLA DE BLOQUEO: Te solicita tu clave de seguridad para entrar.
+  * CLAVE POR DEFECTO: admin123
+- Al colocar la clave correcta, ingresas al panel donde puedes:
+  * Subir fotos de productos (arrastrándolas desde tu PC o seleccionándolas).
+  * Colocar nombre, precio, categoría y descripción.
+  * Ver todos tus productos publicados con botones para Editar o Eliminar.
+  * Configurar el nombre de tu catálogo, moneda y WhatsApp.
+  * Cambiar tu clave de acceso en cualquier momento.
+  * Descargar copias de seguridad de tus productos (JSON).
+
+Como ambas páginas comparten la misma base de datos en tu equipo, 
+cualquier producto que agregues en "admin.html" se verá inmediatamente
+en "index.html".
+
+=============================================================

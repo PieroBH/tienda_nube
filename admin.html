@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administración del Catálogo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="admin-body">
+
+  <!-- ========================================== -->
+  <!-- PANTALLA 1: INICIO DE SESIÓN CON CLAVE     -->
+  <!-- ========================================== -->
+  <div id="loginSection" class="login-wrapper">
+    <div class="login-card">
+      <div class="login-icon">🔒</div>
+      <h2>Panel de Administración</h2>
+      <p class="login-subtitle">Ingresa tu clave de acceso para subir y modificar productos</p>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="passwordInput">Clave de Seguridad</label>
+          <div class="password-wrapper">
+            <input type="password" id="passwordInput" placeholder="Escribe tu clave..." required autofocus autocomplete="current-password">
+            <button type="button" id="btnTogglePassword" class="btn-toggle-pass" title="Mostrar/Ocultar clave">👁️</button>
+          </div>
+        </div>
+
+        <div id="loginErrorMsg" class="login-error hidden">
+          ⚠️ Clave incorrecta. Inténtalo de nuevo.
+        </div>
+
+        <button type="submit" class="btn btn-primary full-width">
+          Entrar al Panel
+        </button>
+
+        <p class="login-hint">💡 Clave inicial por defecto: <strong>admin123</strong> (puedes cambiarla una vez dentro).</p>
+      </form>
+
+      <div class="login-footer">
+        <a href="index.html" class="link-back-catalog">👈 Volver al Catálogo Público</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- PANTALLA 2: PANEL DE ADMINISTRACIÓN COMPLETO -->
+  <!-- ========================================== -->
+  <div id="dashboardSection" class="dashboard-wrapper hidden">
+    <!-- Barra Superior de Administración -->
+    <header class="navbar admin-navbar">
+      <div class="container nav-content">
+        <div class="brand">
+          <div class="brand-icon">⚙️</div>
+          <div>
+            <h1 id="adminStoreTitle">Panel de Administración</h1>
+            <p class="subtitle">Gestión de productos y catálogo</p>
+          </div>
+        </div>
+
+        <div class="nav-actions">
+          <a href="index.html" target="_blank" class="btn btn-secondary btn-sm" title="Abrir catálogo público en otra pestaña">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <span>Ver Catálogo</span>
+          </a>
+          <button id="btnOpenSettings" class="btn btn-secondary btn-sm" title="Ajustes de tienda y cambiar contraseña">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span>Ajustes / Clave</span>
+          </button>
+          <button id="btnLogout" class="btn btn-secondary btn-sm" title="Cerrar sesión de administrador">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>Salir</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenido del Panel -->
+    <main class="container main-content">
+      <div class="upload-panel-layout">
+        
+        <!-- Formulario para Subir / Editar Producto -->
+        <div class="panel-card form-panel">
+          <div class="panel-card-header">
+            <div>
+              <h2 id="formActionTitle">📤 Subir Nuevo Producto</h2>
+              <p class="panel-card-subtitle">Completa los datos del producto para publicarlo en el catálogo</p>
+            </div>
+            <button id="btnCancelEdit" class="btn btn-secondary btn-sm hidden">Cancelar Edición</button>
+          </div>
+
+          <form id="productManageForm">
+            <input type="hidden" id="editProductId">
+
+            <!-- Nombre -->
+            <div class="form-group">
+              <label for="inputName">Nombre del Producto <span class="required">*</span></label>
+              <input type="text" id="inputName" placeholder="Ej: Zapatillas Urbanas Pro" required>
+            </div>
+
+            <!-- Fila: Precio y Categoría -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inputPrice">Precio <span class="required">*</span></label>
+                <div class="price-input-container">
+                  <span id="adminCurrencyBadge" class="currency-badge">$</span>
+                  <input type="number" id="inputPrice" step="any" min="0" placeholder="0.00" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="inputCategory">Categoría</label>
+                <input type="text" id="inputCategory" list="categoriesDatalist" placeholder="Ej: Calzado, Ropa, etc.">
+                <datalist id="categoriesDatalist"></datalist>
+              </div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="form-group">
+              <label for="inputDescription">Descripción</label>
+              <textarea id="inputDescription" rows="3" placeholder="Detalles del producto, talles o colores disponibles..."></textarea>
+            </div>
+
+            <!-- Carga de Foto -->
+            <div class="form-group">
+              <label>Foto del Producto</label>
+              
+              <div class="image-tabs">
+                <button type="button" class="tab-btn active" data-tab="upload">📁 Subir desde mi equipo</button>
+                <button type="button" class="tab-btn" data-tab="url">🔗 Usar enlace de internet</button>
+              </div>
+
+              <!-- Opción 1: Archivo desde equipo -->
+              <div id="tabUploadContent" class="tab-content">
+                <div id="dropZone" class="drop-zone">
+                  <input type="file" id="imageFileInput" accept="image/*" class="file-input">
+                  <div class="drop-zone-content">
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <p class="drop-text"><strong>Haz clic para elegir foto</strong> o arrástrala aquí</p>
+                    <span class="drop-hint">Soporta JPG, PNG, WEBP</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Opción 2: URL de internet -->
+              <div id="tabUrlContent" class="tab-content hidden">
+                <input type="url" id="imageUrlInput" placeholder="https://ejemplo.com/foto.jpg">
+              </div>
+
+              <!-- Vista previa de foto -->
+              <div id="imagePreviewContainer" class="image-preview-container hidden">
+                <img id="imagePreview" alt="Vista previa">
+                <button type="button" id="btnRemoveImage" class="btn-remove-image">&times; Quitar foto</button>
+              </div>
+            </div>
+
+            <!-- Botón Guardar / Publicar -->
+            <div class="form-actions-bar">
+              <button type="submit" id="btnSubmitProduct" class="btn btn-primary full-width">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span id="btnSubmitText">Publicar en el Catálogo</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Lista de Productos Publicados -->
+        <div class="panel-card list-panel">
+          <div class="panel-card-header">
+            <div>
+              <h2>📋 Productos en el Catálogo</h2>
+              <p class="panel-card-subtitle" id="uploadedCountSubtitle">0 productos cargados</p>
+            </div>
+          </div>
+
+          <div id="adminProductsList" class="uploaded-products-list">
+            <!-- Productos generados dinámicamente -->
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: AJUSTES Y CAMBIO DE CLAVE           -->
+  <!-- ========================================== -->
+  <dialog id="settingsDialog" class="modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Ajustes del Catálogo</h3>
+        <button id="btnCloseSettingsModal" class="btn-icon-close" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <form id="settingsForm" method="dialog">
+        <div class="form-group">
+          <label for="storeNameInput">Nombre de tu Tienda / Catálogo</label>
+          <input type="text" id="storeNameInput" placeholder="Ej: Mi Tienda Online">
+        </div>
+
+        <div class="form-group">
+          <label for="storeSubtitleInput">Subtítulo o descripción</label>
+          <input type="text" id="storeSubtitleInput" placeholder="Ej: Envíos a todo el país">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="currencyInput">Símbolo de moneda</label>
+            <input type="text" id="currencyInput" placeholder="$" maxlength="5">
+          </div>
+
+          <div class="form-group">
+            <label for="whatsappPhoneInput">WhatsApp para recibir pedidos</label>
+            <input type="tel" id="whatsappPhoneInput" placeholder="Ej: 5491123456789">
+            <span class="field-hint">Código de país + código de área + número</span>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Sección de Cambio de Clave -->
+        <div class="config-tools-section">
+          <h4>🔒 Cambiar Clave de Acceso</h4>
+          <p class="section-desc">Modifica la clave necesaria para entrar a esta página de administración.</p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newPasswordInput">Nueva Clave</label>
+              <input type="password" id="newPasswordInput" placeholder="Mínimo 4 caracteres">
+            </div>
+            <div class="form-group">
+              <label for="confirmPasswordInput">Confirmar Nueva Clave</label>
+              <input type="password" id="confirmPasswordInput" placeholder="Repite la clave">
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Copias de Seguridad -->
+        <div class="config-tools-section">
+          <h4>💾 Copias de Seguridad</h4>
+          <p class="section-desc">Descarga una copia de seguridad o restaura una anterior.</p>
+          
+          <div class="backup-actions">
+            <button type="button" id="btnExportBackup" class="btn btn-secondary btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Descargar Copia (JSON)
+            </button>
+
+            <label class="btn btn-secondary btn-sm file-upload-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Restaurar Copia
+              <input type="file" id="backupFileInput" accept=".json" class="hidden">
+            </label>
+          </div>
+
+          <div class="danger-zone">
+            <button type="button" id="btnResetDemoData" class="btn btn-text-danger">
+              Recargar productos de ejemplo iniciales
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btnCancelSettings" class="btn btn-secondary">Cerrar</button>
+          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Notificación Toast -->
+  <div id="toast" class="toast hidden">
+    <span id="toastMessage">Acción completada</span>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
