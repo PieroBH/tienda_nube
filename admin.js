@@ -1,17 +1,25 @@
 /**
  * Panel de Administración del Catálogo
  * - Protección por Clave de Acceso (por defecto: admin123)
+ * - Sincronización en la nube con Supabase (para que se vea en todos los celulares y PC)
  * - Subida, Edición y Eliminación de Productos
- * - Gestión de Fotos con Drag & Drop y Compresión
- * - Almacenamiento en IndexedDB (compartido con index.html)
+ * - Gestión de Fotos con Compresión Automática
  */
 
-// Claves de almacenamiento
+// 1. Inicialización de Supabase
+const isSupabaseActive = typeof supabase !== 'undefined' &&
+  typeof SUPABASE_URL !== 'undefined' &&
+  SUPABASE_URL.startsWith('https://') &&
+  !SUPABASE_URL.includes('TU-PROYECTO');
+
+const supabaseClient = isSupabaseActive ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// Claves de autenticación local
 const PASS_STORAGE_KEY = 'catalogo_admin_pass';
 const SESSION_AUTH_KEY = 'catalogo_admin_authenticated';
 const DEFAULT_PASS = 'admin123';
 
-// Base de Datos IndexedDB
+// Base de Datos IndexedDB (Fallback y caché)
 const DB_NAME = 'CatalogoSimpleDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'productos';
@@ -21,7 +29,6 @@ let products = [];
 let currentImageBase64 = '';
 let isEditing = false;
 
-// Configuración general
 const defaultSettings = {
   storeName: 'Mi Catálogo',
   storeSubtitle: 'Catálogo de productos disponibles',
@@ -30,34 +37,26 @@ const defaultSettings = {
 };
 let settings = { ...defaultSettings };
 
-// ==========================================
-// 1. INICIALIZACIÓN DE INDEXEDDB
-// ==========================================
 function initDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-
     request.onupgradeneeded = (e) => {
       const database = e.target.result;
       if (!database.objectStoreNames.contains(STORE_NAME)) {
         database.createObjectStore(STORE_NAME, { keyPath: 'id' });
       }
     };
-
     request.onsuccess = (e) => {
       db = e.target.result;
       resolve(db);
     };
-
-    request.onerror = (e) => {
-      console.error('Error al abrir IndexedDB en Admin:', e.target.error);
-      reject(e.target.error);
-    };
+    request.onerror = (e) => reject(e.target.error);
   });
 }
 
 function dbGetAll() {
   return new Promise((resolve, reject) => {
+    if (!db) return resolve([]);
     const transaction = db.transaction([STORE_NAME], 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.getAll();
@@ -68,52 +67,42 @@ function dbGetAll() {
 
 function dbPut(product) {
   return new Promise((resolve, reject) => {
+    if (!db) return resolve(product);
     const transaction = db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.put(product);
-    request.onsuccess = () => {
-      notifyUpdate();
-      resolve(product);
-    };
+    request.onsuccess = () => resolve(product);
     request.onerror = (e) => reject(e.target.error);
   });
 }
 
 function dbDelete(id) {
   return new Promise((resolve, reject) => {
+    if (!db) return resolve(id);
     const transaction = db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.delete(id);
-    request.onsuccess = () => {
-      notifyUpdate();
-      resolve(id);
-    };
+    request.onsuccess = () => resolve(id);
     request.onerror = (e) => reject(e.target.error);
   });
 }
 
 function dbClear() {
   return new Promise((resolve, reject) => {
+    if (!db) return resolve();
     const transaction = db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.clear();
-    request.onsuccess = () => {
-      notifyUpdate();
-      resolve();
-    };
+    request.onsuccess = () => resolve();
     request.onerror = (e) => reject(e.target.error);
   });
 }
 
-// Avisar a otras pestañas que hubo cambios
 function notifyUpdate() {
   localStorage.setItem('catalogo_last_updated_time', Date.now().toString());
 }
 
-// ==========================================
-// 2. REFERENCIAS A ELEMENTOS DEL DOM
-// ==========================================
-// Login
+// Elementos DOM
 const loginSection = document.getElementById('loginSection');
 const dashboardSection = document.getElementById('dashboardSection');
 const loginForm = document.getElementById('loginForm');
@@ -121,12 +110,10 @@ const passwordInput = document.getElementById('passwordInput');
 const btnTogglePassword = document.getElementById('btnTogglePassword');
 const loginErrorMsg = document.getElementById('loginErrorMsg');
 
-// Dashboard Header
 const adminStoreTitle = document.getElementById('adminStoreTitle');
 const btnOpenSettings = document.getElementById('btnOpenSettings');
 const btnLogout = document.getElementById('btnLogout');
 
-// Formulario de Producto
 const productManageForm = document.getElementById('productManageForm');
 const formActionTitle = document.getElementById('formActionTitle');
 const editProductId = document.getElementById('editProductId');
@@ -140,7 +127,6 @@ const btnSubmitProduct = document.getElementById('btnSubmitProduct');
 const btnSubmitText = document.getElementById('btnSubmitText');
 const btnCancelEdit = document.getElementById('btnCancelEdit');
 
-// Carga de Fotos
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabUploadContent = document.getElementById('tabUploadContent');
 const tabUrlContent = document.getElementById('tabUrlContent');
@@ -151,11 +137,9 @@ const imagePreviewContainer = document.getElementById('imagePreviewContainer');
 const imagePreview = document.getElementById('imagePreview');
 const btnRemoveImage = document.getElementById('btnRemoveImage');
 
-// Lista de Productos
 const adminProductsList = document.getElementById('adminProductsList');
 const uploadedCountSubtitle = document.getElementById('uploadedCountSubtitle');
 
-// Ajustes & Modal
 const settingsDialog = document.getElementById('settingsDialog');
 const btnCloseSettingsModal = document.getElementById('btnCloseSettingsModal');
 const btnCancelSettings = document.getElementById('btnCancelSettings');
@@ -170,13 +154,10 @@ const btnExportBackup = document.getElementById('btnExportBackup');
 const backupFileInput = document.getElementById('backupFileInput');
 const btnResetDemoData = document.getElementById('btnResetDemoData');
 
-// Toast
 const toast = document.getElementById('toast');
 const toastMessage = document.getElementById('toastMessage');
 
-// ==========================================
-// 3. AUTENTICACIÓN Y CONTROL DE ACCESO
-// ==========================================
+// Autenticación
 function getStoredPassword() {
   return localStorage.getItem(PASS_STORAGE_KEY) || DEFAULT_PASS;
 }
@@ -228,22 +209,49 @@ function handleLogout() {
   showToast('Sesión cerrada');
 }
 
-// ==========================================
-// 4. CARGA DE DATOS DEL DASHBOARD
-// ==========================================
+// Carga de datos
 async function loadDashboardData() {
   loadSettings();
   applySettings();
 
   try {
     await initDB();
-    products = await dbGetAll();
-    renderAdminProductsList();
-    updateCategoryDatalist();
-  } catch (error) {
-    console.error('Error al cargar datos:', error);
-    showToast('Error al conectar con la base de datos');
+  } catch (e) {
+    console.warn('DB local:', e);
   }
+
+  await refreshAdminList();
+}
+
+async function refreshAdminList() {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('productos_catalogo')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      products = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        price: Number(item.price),
+        category: item.category,
+        description: item.description,
+        image: item.image,
+        createdAt: Number(item.created_at)
+      }));
+    } catch (err) {
+      console.error('Error al leer de Supabase:', err);
+      products = await dbGetAll();
+    }
+  } else {
+    products = await dbGetAll();
+  }
+
+  renderAdminProductsList();
+  updateCategoryDatalist();
 }
 
 function loadSettings() {
@@ -275,17 +283,14 @@ function formatPrice(amount) {
   return `${symbol} ${num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-// ==========================================
-// 5. GESTIÓN DE PRODUCTOS
-// ==========================================
 function renderAdminProductsList() {
   adminProductsList.innerHTML = '';
-  uploadedCountSubtitle.textContent = `${products.length} ${products.length === 1 ? 'producto cargado' : 'productos cargados'}`;
+  uploadedCountSubtitle.textContent = `${products.length} ${products.length === 1 ? 'producto en total' : 'productos en total'}${supabaseClient ? ' (Sincronizado con Supabase ☁️)' : ''}`;
 
   if (products.length === 0) {
     adminProductsList.innerHTML = `
       <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); font-size: 0.9rem;">
-        Aún no has subido productos. Completa el formulario de la izquierda para agregar tu primer producto al catálogo.
+        Aún no has subido productos. Completa el formulario de la izquierda para agregar tu primer producto.
       </div>
     `;
     return;
@@ -314,10 +319,10 @@ function renderAdminProductsList() {
         </div>
       </div>
       <div class="uploaded-actions">
-        <button type="button" class="btn-item-action" onclick="startEditProduct('${p.id}')" title="Editar este producto">
+        <button type="button" class="btn-item-action" onclick="startEditProduct('${p.id}')" title="Editar producto">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
         </button>
-        <button type="button" class="btn-item-action delete" onclick="handleDeleteProduct('${p.id}')" title="Eliminar este producto">
+        <button type="button" class="btn-item-action delete" onclick="handleDeleteProduct('${p.id}')" title="Eliminar producto">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
         </button>
       </div>
@@ -426,23 +431,39 @@ async function handleProductSubmit(e) {
     updatedAt: Date.now()
   };
 
-  try {
-    await dbPut(productObj);
+  btnSubmitProduct.disabled = true;
+  showToast('Guardando producto...');
 
-    if (existingIndex >= 0) {
-      products[existingIndex] = productObj;
-      showToast('¡Producto actualizado con éxito!');
+  try {
+    if (supabaseClient) {
+      const { error } = await supabaseClient
+        .from('productos_catalogo')
+        .upsert([{
+          id: productObj.id,
+          name: productObj.name,
+          price: productObj.price,
+          category: productObj.category,
+          description: productObj.description,
+          image: productObj.image,
+          created_at: productObj.createdAt
+        }]);
+
+      if (error) throw error;
+      showToast('¡Guardado en la nube de Supabase! ☁️');
     } else {
-      products.unshift(productObj);
-      showToast('¡Producto publicado en el catálogo!');
+      showToast('¡Guardado localmente!');
     }
 
+    await dbPut(productObj);
+    notifyUpdate();
+
     cancelEdit();
-    updateCategoryDatalist();
-    renderAdminProductsList();
+    await refreshAdminList();
   } catch (error) {
     console.error('Error al guardar:', error);
-    showToast('Error al guardar el producto');
+    alert('Error al guardar en Supabase: ' + (error.message || error));
+  } finally {
+    btnSubmitProduct.disabled = false;
   }
 }
 
@@ -454,25 +475,33 @@ async function handleDeleteProduct(id) {
   if (!confirmDelete) return;
 
   try {
+    if (supabaseClient) {
+      const { error } = await supabaseClient
+        .from('productos_catalogo')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      showToast('Producto eliminado de la nube');
+    } else {
+      showToast('Producto eliminado');
+    }
+
     await dbDelete(id);
-    products = products.filter(x => x.id !== id);
+    notifyUpdate();
 
     if (editProductId.value === id) {
       cancelEdit();
     }
 
-    showToast('Producto eliminado');
-    updateCategoryDatalist();
-    renderAdminProductsList();
+    await refreshAdminList();
   } catch (error) {
     console.error('Error al eliminar:', error);
-    showToast('Error al eliminar el producto');
+    showToast('Error al eliminar');
   }
 }
 
-// ==========================================
-// 6. PROCESAMIENTO Y COMPRESIÓN DE FOTOS
-// ==========================================
+// Compresión de fotos
 function setActiveTab(tabName) {
   tabBtns.forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
@@ -543,16 +572,14 @@ async function handleFileSelected(file) {
     currentImageBase64 = compressed;
     imagePreview.src = compressed;
     imagePreviewContainer.classList.remove('hidden');
-    showToast('Foto lista para publicar');
+    showToast('Foto lista');
   } catch (e) {
     console.error(e);
     showToast('No se pudo procesar la imagen');
   }
 }
 
-// ==========================================
-// 7. AJUSTES, CAMBIO DE CLAVE Y BACKUPS
-// ==========================================
+// Ajustes y Backups
 function openSettingsModal() {
   storeNameInput.value = settings.storeName || '';
   storeSubtitleInput.value = settings.storeSubtitle || '';
@@ -572,7 +599,6 @@ function handleSettingsSubmit(e) {
   settings.whatsappPhone = whatsappPhoneInput.value.trim();
   saveSettings();
 
-  // Cambio de contraseña si se completó el campo
   const newPass = newPasswordInput.value.trim();
   const confirmPass = confirmPasswordInput.value.trim();
 
@@ -582,14 +608,14 @@ function handleSettingsSubmit(e) {
       return;
     }
     if (newPass !== confirmPass) {
-      alert('Las claves no coinciden. Verifica e intenta de nuevo.');
+      alert('Las claves no coinciden.');
       return;
     }
 
     localStorage.setItem(PASS_STORAGE_KEY, newPass);
-    showToast('¡Clave de acceso y ajustes actualizados!');
+    showToast('¡Clave y ajustes actualizados!');
   } else {
-    showToast('Ajustes guardados correctamente');
+    showToast('Ajustes guardados');
   }
 
   settingsDialog.close();
@@ -636,6 +662,20 @@ async function importBackup(file) {
 
     if (!confirmImport) return;
 
+    if (supabaseClient) {
+      for (const item of data.products) {
+        await supabaseClient.from('productos_catalogo').upsert([{
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          category: item.category,
+          description: item.description,
+          image: item.image,
+          created_at: item.createdAt || Date.now()
+        }]);
+      }
+    }
+
     await dbClear();
     for (const item of data.products) {
       await dbPut(item);
@@ -646,15 +686,12 @@ async function importBackup(file) {
       saveSettings();
     }
 
-    products = await dbGetAll();
-    updateCategoryDatalist();
-    renderAdminProductsList();
+    await refreshAdminList();
     settingsDialog.close();
-
-    showToast(`¡Copia restaurada! ${products.length} productos cargados.`);
+    showToast(`¡Copia restaurada! ${products.length} productos.`);
   } catch (error) {
     console.error(error);
-    alert('Error al leer el archivo. Asegúrate de que sea un archivo JSON válido.');
+    alert('Error al leer el archivo JSON.');
   }
 }
 
@@ -663,7 +700,6 @@ async function resetDemoData() {
   if (!confirmReset) return;
 
   try {
-    await dbClear();
     const sampleProducts = [
       {
         id: 'prod-1',
@@ -679,32 +715,41 @@ async function resetDemoData() {
         name: 'Mochila Urbana Impermeable',
         price: 3200.00,
         category: 'Accesorios',
-        description: 'Compartimento para notebook de hasta 15.6 pulgadas, tejido impermeable y espaldar ergonómico.',
+        description: 'Compartimento para notebook de hasta 15.6 pulgadas, impermeable.',
         image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=700&q=80',
         createdAt: Date.now() - 200000
       }
     ];
 
+    if (supabaseClient) {
+      for (const item of sampleProducts) {
+        await supabaseClient.from('productos_catalogo').upsert([{
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          category: item.category,
+          description: item.description,
+          image: item.image,
+          created_at: item.createdAt
+        }]);
+      }
+    }
+
+    await dbClear();
     for (const item of sampleProducts) {
       await dbPut(item);
     }
 
-    products = await dbGetAll();
-    updateCategoryDatalist();
-    renderAdminProductsList();
+    await refreshAdminList();
     settingsDialog.close();
     showToast('Productos de muestra restaurados');
   } catch (error) {
     console.error(error);
-    showToast('Error al restablecer productos');
+    showToast('Error al restablecer');
   }
 }
 
-// ==========================================
-// 8. EVENT LISTENERS
-// ==========================================
 function setupEventListeners() {
-  // Login
   loginForm.addEventListener('submit', handleLogin);
   btnTogglePassword.addEventListener('click', () => {
     const isPass = passwordInput.type === 'password';
@@ -712,19 +757,14 @@ function setupEventListeners() {
     btnTogglePassword.textContent = isPass ? '🙈' : '👁️';
   });
 
-  // Logout
   btnLogout.addEventListener('click', handleLogout);
-
-  // Formulario Producto
   productManageForm.addEventListener('submit', handleProductSubmit);
   btnCancelEdit.addEventListener('click', cancelEdit);
 
-  // Pestañas de Imagen
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
   });
 
-  // Selector de imagen y Drag & Drop
   imageFileInput.addEventListener('change', (e) => {
     if (e.target.files && e.target.files[0]) {
       handleFileSelected(e.target.files[0]);
@@ -765,13 +805,11 @@ function setupEventListeners() {
     imagePreviewContainer.classList.add('hidden');
   });
 
-  // Modal Ajustes
   btnOpenSettings.addEventListener('click', openSettingsModal);
   btnCloseSettingsModal.addEventListener('click', () => settingsDialog.close());
   btnCancelSettings.addEventListener('click', () => settingsDialog.close());
   settingsForm.addEventListener('submit', handleSettingsSubmit);
 
-  // Click fuera del modal para cerrar
   settingsDialog.addEventListener('click', (e) => {
     const rect = settingsDialog.getBoundingClientRect();
     const isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
@@ -781,7 +819,6 @@ function setupEventListeners() {
     }
   });
 
-  // Backups
   btnExportBackup.addEventListener('click', exportBackup);
   backupFileInput.addEventListener('change', (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -791,9 +828,6 @@ function setupEventListeners() {
   btnResetDemoData.addEventListener('click', resetDemoData);
 }
 
-// ==========================================
-// 9. UTILIDADES
-// ==========================================
 function escapeHTML(str) {
   if (!str) return '';
   return String(str)
@@ -819,7 +853,6 @@ function showToast(msg) {
   }, 2800);
 }
 
-// Iniciar comprobando acceso
 document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   checkAccess();

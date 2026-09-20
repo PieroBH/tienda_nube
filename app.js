@@ -1,11 +1,19 @@
 /**
  * Catálogo Público de Productos (index.html)
  * - Vista 100% limpia para clientes
- * - Búsqueda, filtros por categoría y pedidos directos por WhatsApp
- * - Carga desde la base de datos local IndexedDB
- * - Actualización automática cuando se agregan productos desde el admin
+ * - Sincronización en la nube con Supabase (en tiempo real)
+ * - Modo fallback local en IndexedDB si no se configuró Supabase
  */
 
+// 1. Inicialización de Supabase
+const isSupabaseActive = typeof supabase !== 'undefined' &&
+  typeof SUPABASE_URL !== 'undefined' &&
+  SUPABASE_URL.startsWith('https://') &&
+  !SUPABASE_URL.includes('TU-PROYECTO');
+
+const supabaseClient = isSupabaseActive ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// 2. Base de Datos Local (Fallback)
 const DB_NAME = 'CatalogoSimpleDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'productos';
@@ -24,32 +32,26 @@ const defaultSettings = {
 
 let settings = { ...defaultSettings };
 
-// Inicializar IndexedDB
 function initDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-
     request.onupgradeneeded = (e) => {
       const database = e.target.result;
       if (!database.objectStoreNames.contains(STORE_NAME)) {
         database.createObjectStore(STORE_NAME, { keyPath: 'id' });
       }
     };
-
     request.onsuccess = (e) => {
       db = e.target.result;
       resolve(db);
     };
-
-    request.onerror = (e) => {
-      console.error('Error al inicializar IndexedDB:', e.target.error);
-      reject(e.target.error);
-    };
+    request.onerror = (e) => reject(e.target.error);
   });
 }
 
 function dbGetAll() {
   return new Promise((resolve, reject) => {
+    if (!db) return resolve([]);
     const transaction = db.transaction([STORE_NAME], 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.getAll();
@@ -69,7 +71,6 @@ const productsGrid = document.getElementById('productsGrid');
 const emptyState = document.getElementById('emptyState');
 const catalogStats = document.getElementById('catalogStats');
 
-// Modal de Detalle
 const detailDialog = document.getElementById('detailDialog');
 const btnCloseDetailModal = document.getElementById('btnCloseDetailModal');
 const detailImage = document.getElementById('detailImage');
@@ -85,16 +86,56 @@ async function startCatalog() {
 
   try {
     await initDB();
-    await refreshProducts();
-  } catch (error) {
-    console.error('Error al cargar catálogo:', error);
+  } catch (e) {
+    console.warn('IndexedDB no disponible, usando memoria:', e);
+  }
+
+  await refreshProducts();
+
+  // Suscribirse a cambios en tiempo real si Supabase está activo
+  if (supabaseClient) {
+    try {
+      supabaseClient
+        .channel('cambios-catalogo')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'productos_catalogo' }, () => {
+          refreshProducts();
+        })
+        .subscribe();
+    } catch (e) {
+      console.warn('Realtime Supabase:', e);
+    }
   }
 
   setupEventListeners();
 }
 
 async function refreshProducts() {
-  products = await dbGetAll();
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('productos_catalogo')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      products = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        price: Number(item.price),
+        category: item.category,
+        description: item.description,
+        image: item.image,
+        createdAt: Number(item.created_at)
+      }));
+    } catch (err) {
+      console.error('Error al cargar de Supabase, usando respaldo local:', err);
+      products = await dbGetAll();
+    }
+  } else {
+    products = await dbGetAll();
+  }
+
   renderCatalog();
   updateCategoryFilters();
 }
@@ -124,7 +165,6 @@ function formatPrice(amount) {
   return `${symbol} ${num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-// Renderizar tarjetas públicas
 function renderCatalog() {
   const filtered = products.filter(p => {
     const matchCategory = (activeCategory === 'all') || (p.category && p.category.toLowerCase() === activeCategory.toLowerCase());
@@ -295,7 +335,6 @@ function setupEventListeners() {
     }
   });
 
-  // Auto-refrescar cuando se actualicen datos desde admin.html
   window.addEventListener('storage', (e) => {
     if (e.key === 'catalogo_last_updated_time' || e.key === 'catalogo_config') {
       loadSettings();
