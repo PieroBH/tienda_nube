@@ -162,7 +162,7 @@ function applySettings() {
 function formatPrice(amount) {
   const symbol = settings.currency || '$';
   const num = parseFloat(amount);
-  if (isNaN(num)) return `${symbol} 0.00`;
+  if (isNaN(num) || num <= 0) return 'Consultar precio';
   return `${symbol} ${num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
@@ -239,7 +239,9 @@ function createProductCard(p) {
 
 function getWhatsappLink(product) {
   const phone = settings.whatsappPhone ? settings.whatsappPhone.replace(/[^0-9]/g, '') : '';
-  const text = encodeURIComponent(`Hola! Me interesa este producto de su catálogo:\n- *${product.name}*\n- Precio: ${formatPrice(product.price)}`);
+  const priceVal = parseFloat(product.price);
+  const priceInfo = (!isNaN(priceVal) && priceVal > 0) ? `Precio: ${formatPrice(product.price)}` : 'Consultar precio y disponibilidad';
+  const text = encodeURIComponent(`Hola! Me interesa este producto de su catálogo:\n- *${product.name}*\n- ${priceInfo}`);
   
   if (phone) {
     return `https://wa.me/${phone}?text=${text}`;

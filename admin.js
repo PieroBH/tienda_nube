@@ -280,7 +280,7 @@ function applySettings() {
 function formatPrice(amount) {
   const symbol = settings.currency || '$';
   const num = parseFloat(amount);
-  if (isNaN(num)) return `${symbol} 0.00`;
+  if (isNaN(num) || num <= 0) return 'Consultar precio';
   return `${symbol} ${num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
