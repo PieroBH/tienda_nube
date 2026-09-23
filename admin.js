@@ -30,11 +30,31 @@ let products = [];
 let currentImageBase64 = '';
 let isEditing = false;
 
+function cleanWhatsappPhone(raw) {
+  if (!raw) return '';
+  let digits = String(raw).replace(/\D/g, '');
+  if (!digits) return '';
+
+  while (digits.startsWith('0')) {
+    digits = digits.slice(1);
+  }
+
+  if (digits.length === 10) {
+    digits = '549' + digits;
+  } else if (digits.length === 12 && digits.startsWith('54') && !digits.startsWith('549')) {
+    digits = '549' + digits.slice(2);
+  }
+
+  return digits;
+}
+
+const globalPhone = (typeof STORE_WHATSAPP_PHONE !== 'undefined' && STORE_WHATSAPP_PHONE) ? STORE_WHATSAPP_PHONE : '';
+
 const defaultSettings = {
   storeName: 'Mi Catálogo',
   storeSubtitle: 'Catálogo de productos disponibles',
   currency: '$',
-  whatsappPhone: ''
+  whatsappPhone: globalPhone
 };
 let settings = { ...defaultSettings };
 
@@ -256,13 +276,19 @@ async function refreshAdminList() {
 }
 
 function loadSettings() {
+  const globalPhone = (typeof STORE_WHATSAPP_PHONE !== 'undefined' && STORE_WHATSAPP_PHONE) ? STORE_WHATSAPP_PHONE : '';
   const saved = localStorage.getItem('catalogo_config');
   if (saved) {
     try {
       settings = { ...defaultSettings, ...JSON.parse(saved) };
+      if (!settings.whatsappPhone && globalPhone) {
+        settings.whatsappPhone = globalPhone;
+      }
     } catch (e) {
       console.error(e);
     }
+  } else {
+    settings = { ...defaultSettings, whatsappPhone: globalPhone };
   }
 }
 
@@ -597,7 +623,7 @@ function handleSettingsSubmit(e) {
   settings.storeName = storeNameInput.value.trim() || 'Mi Catálogo';
   settings.storeSubtitle = storeSubtitleInput.value.trim() || 'Catálogo de productos';
   settings.currency = currencyInput.value.trim() || '$';
-  settings.whatsappPhone = whatsappPhoneInput.value.trim();
+  settings.whatsappPhone = cleanWhatsappPhone(whatsappPhoneInput.value.trim());
   saveSettings();
 
   const newPass = newPasswordInput.value.trim();

@@ -24,11 +24,31 @@ let products = [];
 let activeCategory = 'all';
 let currentSearch = '';
 
+function cleanWhatsappPhone(raw) {
+  if (!raw) return '';
+  let digits = String(raw).replace(/\D/g, '');
+  if (!digits) return '';
+
+  while (digits.startsWith('0')) {
+    digits = digits.slice(1);
+  }
+
+  if (digits.length === 10) {
+    digits = '549' + digits;
+  } else if (digits.length === 12 && digits.startsWith('54') && !digits.startsWith('549')) {
+    digits = '549' + digits.slice(2);
+  }
+
+  return digits;
+}
+
+const globalPhone = (typeof STORE_WHATSAPP_PHONE !== 'undefined' && STORE_WHATSAPP_PHONE) ? STORE_WHATSAPP_PHONE : '';
+
 const defaultSettings = {
   storeName: 'Mi Catálogo',
   storeSubtitle: 'Catálogo de productos disponibles',
   currency: '$',
-  whatsappPhone: ''
+  whatsappPhone: globalPhone
 };
 
 let settings = { ...defaultSettings };
@@ -142,13 +162,19 @@ async function refreshProducts() {
 }
 
 function loadSettings() {
+  const globalPhone = (typeof STORE_WHATSAPP_PHONE !== 'undefined' && STORE_WHATSAPP_PHONE) ? STORE_WHATSAPP_PHONE : '';
   const saved = localStorage.getItem('catalogo_config');
   if (saved) {
     try {
       settings = { ...defaultSettings, ...JSON.parse(saved) };
+      if (!settings.whatsappPhone && globalPhone) {
+        settings.whatsappPhone = globalPhone;
+      }
     } catch (e) {
       console.error(e);
     }
+  } else {
+    settings = { ...defaultSettings, whatsappPhone: globalPhone };
   }
 }
 
@@ -238,7 +264,10 @@ function createProductCard(p) {
 }
 
 function getWhatsappLink(product) {
-  const phone = settings.whatsappPhone ? settings.whatsappPhone.replace(/[^0-9]/g, '') : '';
+  const globalPhone = (typeof STORE_WHATSAPP_PHONE !== 'undefined' && STORE_WHATSAPP_PHONE) ? STORE_WHATSAPP_PHONE : '';
+  const rawPhone = settings.whatsappPhone || globalPhone;
+  const phone = cleanWhatsappPhone(rawPhone);
+
   const priceVal = parseFloat(product.price);
   const priceInfo = (!isNaN(priceVal) && priceVal > 0) ? `Precio: ${formatPrice(product.price)}` : 'Consultar precio y disponibilidad';
   const text = encodeURIComponent(`Hola! Me interesa este producto de su catálogo:\n- *${product.name}*\n- ${priceInfo}`);
@@ -246,7 +275,7 @@ function getWhatsappLink(product) {
   if (phone) {
     return `https://wa.me/${phone}?text=${text}`;
   }
-  return `https://api.whatsapp.com/send?text=${text}`;
+  return `javascript:alert('⚠️ Aún no se ha configurado el número de WhatsApp receptor de pedidos.');`;
 }
 
 function updateCategoryFilters() {
