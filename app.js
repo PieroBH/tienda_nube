@@ -381,14 +381,31 @@ async function startCatalog() {
 async function refreshProducts() {
   if (supabaseClient) {
     try {
-      const { data, error } = await supabaseClient
-        .from('productos_catalogo')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let allData = [];
+      let from = 0;
+      const step = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
+      while (hasMore) {
+        const { data, error } = await supabaseClient
+          .from('productos_catalogo')
+          .select('*')
+          .range(from, from + step - 1)
+          .order('created_at', { ascending: false });
 
-      products = (data || []).map(item => ({
+        if (error) throw error;
+        if (data && data.length > 0) {
+          allData = allData.concat(data);
+          from += step;
+          if (data.length < step) {
+            hasMore = false;
+          }
+        } else {
+          hasMore = false;
+        }
+      }
+
+      products = allData.map(item => ({
         id: item.id,
         name: item.name,
         price: Number(item.price),
