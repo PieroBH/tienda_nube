@@ -54,7 +54,7 @@ function cleanWhatsappPhone(raw) {
 const globalPhone = (typeof STORE_WHATSAPP_PHONE !== 'undefined' && STORE_WHATSAPP_PHONE) ? STORE_WHATSAPP_PHONE : '';
 
 const defaultSettings = {
-  storeName: 'Mi Catálogo',
+  storeName: 'Grano Store',
   storeSubtitle: 'Catálogo de productos disponibles',
   currency: '$',
   whatsappPhone: globalPhone
@@ -432,6 +432,9 @@ function loadSettings() {
   if (saved) {
     try {
       settings = { ...defaultSettings, ...JSON.parse(saved) };
+      if (!settings.storeName || settings.storeName === 'Mi Catálogo') {
+        settings.storeName = 'Grano Store';
+      }
       if (!settings.whatsappPhone && globalPhone) {
         settings.whatsappPhone = globalPhone;
       }
@@ -444,10 +447,10 @@ function loadSettings() {
 }
 
 function applySettings() {
-  storeTitleDisplay.textContent = settings.storeName || 'Mi Catálogo';
+  storeTitleDisplay.textContent = settings.storeName || 'Grano Store';
   storeSubtitleDisplay.textContent = settings.storeSubtitle || 'Catálogo de productos disponibles';
-  footerStoreName.textContent = settings.storeName || 'Mi Catálogo';
-  document.title = `${settings.storeName || 'Mi Catálogo'} - Catálogo Online`;
+  footerStoreName.textContent = settings.storeName || 'Grano Store';
+  document.title = `${settings.storeName || 'Grano Store'} - Catálogo Online`;
 }
 
 function formatPrice(amount) {

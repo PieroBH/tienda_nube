@@ -51,7 +51,7 @@ function cleanWhatsappPhone(raw) {
 const globalPhone = (typeof STORE_WHATSAPP_PHONE !== 'undefined' && STORE_WHATSAPP_PHONE) ? STORE_WHATSAPP_PHONE : '';
 
 const defaultSettings = {
-  storeName: 'Mi Catálogo',
+  storeName: 'Grano Store',
   storeSubtitle: 'Catálogo de productos disponibles',
   currency: '$',
   whatsappPhone: globalPhone
@@ -298,6 +298,9 @@ function loadSettings() {
   if (saved) {
     try {
       settings = { ...defaultSettings, ...JSON.parse(saved) };
+      if (!settings.storeName || settings.storeName === 'Mi Catálogo') {
+        settings.storeName = 'Grano Store';
+      }
       if (!settings.whatsappPhone && globalPhone) {
         settings.whatsappPhone = globalPhone;
       }
@@ -316,7 +319,7 @@ function saveSettings() {
 }
 
 function applySettings() {
-  adminStoreTitle.textContent = settings.storeName || 'Panel de Administración';
+  adminStoreTitle.textContent = settings.storeName || 'Grano Store';
   adminCurrencyBadge.textContent = settings.currency || '$';
 }
 
@@ -637,7 +640,7 @@ function openSettingsModal() {
 function handleSettingsSubmit(e) {
   e.preventDefault();
 
-  settings.storeName = storeNameInput.value.trim() || 'Mi Catálogo';
+  settings.storeName = storeNameInput.value.trim() || 'Grano Store';
   settings.storeSubtitle = storeSubtitleInput.value.trim() || 'Catálogo de productos';
   settings.currency = currencyInput.value.trim() || '$';
   settings.whatsappPhone = cleanWhatsappPhone(whatsappPhoneInput.value.trim());

@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Catálogo de Productos</title>
+  <title>Grano Store - Catálogo de Productos</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script>
-    const savedTheme = localStorage.getItem('catalogo_theme') || 'dark';
+    const savedTheme = localStorage.getItem('catalogo_theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
 </head>
@@ -19,9 +19,9 @@
   <header class="navbar">
     <div class="container nav-content-public">
       <div class="brand">
-        <div class="brand-icon">📦</div>
+        <div class="brand-badge-logo">GS</div>
         <div>
-          <h1 id="storeTitleDisplay">Mi Catálogo</h1>
+          <h1 id="storeTitleDisplay">Grano Store</h1>
           <p class="subtitle" id="storeSubtitleDisplay">Catálogo de productos disponibles</p>
         </div>
       </div>
@@ -209,7 +209,7 @@
   <!-- Pie de página con Acceso Discreto -->
   <footer class="footer">
     <div class="container footer-content">
-      <p id="footerStoreName">Mi Catálogo</p>
+      <p id="footerStoreName">Grano Store</p>
       <p class="footer-hint">Catálogo de productos online</p>
       
       <!-- Enlace sutil y discreto al fondo de la página -->

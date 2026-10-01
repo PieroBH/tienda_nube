@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administración del Catálogo</title>
+  <title>Administración - Grano Store</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script>
-    const savedTheme = localStorage.getItem('catalogo_theme') || 'dark';
+    const savedTheme = localStorage.getItem('catalogo_theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
 </head>
@@ -41,7 +41,7 @@
           Entrar al Panel
         </button>
 
-        <p class="login-hint">💡 Clave inicial por defecto: (puedes cambiarla una vez dentro).</p>
+        <p class="login-hint">💡 Clave inicial por defecto: <strong>admin123</strong> (puedes cambiarla una vez dentro).</p>
       </form>
 
       <div class="login-footer">
@@ -58,9 +58,9 @@
     <header class="navbar admin-navbar">
       <div class="container nav-content">
         <div class="brand">
-          <div class="brand-icon">⚙️</div>
+          <div class="brand-badge-logo">GS</div>
           <div>
-            <h1 id="adminStoreTitle">Panel de Administración</h1>
+            <h1 id="adminStoreTitle">Grano Store</h1>
             <p class="subtitle">Gestión de productos y catálogo</p>
           </div>
         </div>
@@ -203,7 +203,7 @@
       <form id="settingsForm" method="dialog">
         <div class="form-group">
           <label for="storeNameInput">Nombre de tu Tienda / Catálogo</label>
-          <input type="text" id="storeNameInput" placeholder="Ej: Mi Tienda Online">
+          <input type="text" id="storeNameInput" placeholder="Ej: Grano Store">
         </div>
 
         <div class="form-group">
